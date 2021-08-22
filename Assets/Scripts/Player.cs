@@ -5,14 +5,14 @@ using UnityEngine;
 public class Player : MonoBehaviour {
 	// private Rigidbody2D rb; // handles physics and collisions
 	private Vector2 wasd = new Vector2(0, 0); // 
-	private float speed = 10; // how fast the player moves
+	private float speed = 13; // how fast the player moves
 	private float gravity = -9.81f; // how fast the player falls
-	private float friction = 0.6f; // how fast the player slows down
+	private float friction = 0.8f; // how fast the player slows down
 	private Vector3 velocity = new Vector2(0, 0);
 	private bool pressedSpace = false;
 
 	// Get the player's direction of movement
-	private void GetWasd() {
+	private void GetWasdInput() {
 		if (Input.GetKey(KeyCode.W)) wasd.y = 1;
 		else if (Input.GetKey(KeyCode.S)) wasd.y = -1;
 		else wasd.y = 0;
@@ -21,13 +21,14 @@ public class Player : MonoBehaviour {
 		else wasd.x = 0;
 	}
 
-	private void ChangeVelocity() {
+	private void SetVelocity() {
 		if (wasd.x != 0) velocity.x = wasd.x * speed;
 		if (wasd.y != 0) velocity.y = wasd.y * speed;
 	}
 
 	private void Gravity() => velocity.y += gravity * 1.5f * Time.deltaTime;
-	private bool IsGrounded() => Physics2D.RaycastAll(transform.position, Vector2.down, 0.51f).Length > 1;
+	private bool IsGrounded() => Physics2D.RaycastAll(transform.position, Vector2.down, 0.501f).Length > 1;
+
 
 	private void Bounce(RaycastHit2D hit) {
 		velocity *= friction;
@@ -38,8 +39,8 @@ public class Player : MonoBehaviour {
 	// Update the player's position
 	private void Movement() {
 		if (pressedSpace) {
-			GetWasd(); // Get WASD input
-			ChangeVelocity(); // Change velocity
+			GetWasdInput(); // Get WASD input
+			SetVelocity(); // Change velocity
 			pressedSpace = false;
 		}
 		Gravity();

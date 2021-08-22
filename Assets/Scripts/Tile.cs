@@ -6,16 +6,12 @@ using UnityEngine;
 public class Tile : MonoBehaviour {
 	private bool isMoving = true;
 
-	public void SetAsBorder(Color c) {
-		GetComponent<SpriteRenderer>().color = c;
+	public void SetAsBorder() {
 		isMoving = false;
 	}
 
-    void Awake() {
-        
-    }
-
-    void Update() {
-        
+    public void Init(int x, int y, Color c) {
+        transform.localPosition = new Vector3(x, y, 0);
+		GetComponent<SpriteRenderer>().color = c;
     }
 }

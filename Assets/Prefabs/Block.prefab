@@ -9,8 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1581698225768001553}
-  - component: {fileID: 3174965203582399716}
-  - component: {fileID: 3759704546646684026}
+  - component: {fileID: 5587144678816155949}
   m_Layer: 0
   m_Name: Block
   m_TagString: Untagged
@@ -32,7 +31,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3174965203582399716
+--- !u!114 &5587144678816155949
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,27 +40,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 1903279643810107618}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7481fe4faa4ac449f825ba452f931112, type: 3}
+  m_Script: {fileID: 11500000, guid: a429e4bbbfec2450591f3e3a0530715b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!50 &3759704546646684026
-Rigidbody2D:
-  serializedVersion: 4
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1903279643810107618}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1000000
-  m_LinearDrag: 1
-  m_AngularDrag: 1
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 4
