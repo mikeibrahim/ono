@@ -45,8 +45,9 @@ public class GameManager : MonoBehaviour {
 	public static GameManager INST;
 	private static int BOARD_WIDTH = 15, BOARD_HEIGHT = 10, BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT;
 	private Tile[,] board = new Tile[BOARD_WIDTH, BOARD_HEIGHT];
-	private float spawnInterval = 0.5f;
-	float currentSpawnInterval;
+	private List<Block> blocks = new List<Block>();
+	private float spawnInterval = 2f, stepInterval = 0.5f;
+	float currentSpawnInterval, currentStepInterval;
 	[SerializeField] private Block blockPrefab;
 	[SerializeField] private Tile tilePrefab;
 	[SerializeField] private GameObject playerPrefab;
@@ -61,7 +62,7 @@ public class GameManager : MonoBehaviour {
 					Tile tile = Instantiate(tilePrefab, arenaHolder.transform);
 					tile.transform.SetParent(arenaHolder.transform);
 					tile.Init(i, j, Color.black);
-					tile.SetAsBorder(); // Set the tile to be a border
+					// tile.SetAsBorder(); // Set the tile to be a border
 				}
 	}
 
@@ -83,6 +84,9 @@ public class GameManager : MonoBehaviour {
 		Color c = new Color(UnityEngine.Random.Range(0, 1f), UnityEngine.Random.Range(0, 1f), UnityEngine.Random.Range(0, 1f));
 		block.Init(pattern, tilePrefab, c);
 		block.PositionAtTop(BOARD_WIDTH, BOARD_HEIGHT);
+		// Add the block's tiles to the board
+		block.AddToBoard(board);
+		blocks.Add(block);
 	}
 
 	// Create a random rotation pattern
@@ -129,5 +133,16 @@ public class GameManager : MonoBehaviour {
 		} else {
 			currentSpawnInterval -= Time.deltaTime;
 		}
+
+		// Move the blocks
+		if (currentStepInterval <= 0) {
+			foreach (Block block in blocks) {
+				block.MoveBlock(board);
+			}
+			currentStepInterval = stepInterval;
+		} else {
+			currentStepInterval -= Time.deltaTime;
+		}
+
 	}
 }
