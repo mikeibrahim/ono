@@ -6,7 +6,7 @@ public class Block : MonoBehaviour {
 	#region Variables
 	private List<Tile> tiles = new List<Tile>();
 	private int width, height;
-	private bool isStatic = false, isDestroyed = false;
+	// private bool isStatic = false, isDestroyed = false;
 	#endregion
 
 	#region Methods
@@ -42,34 +42,32 @@ public class Block : MonoBehaviour {
 			board[x, y] = tile;
 		}
 	}
-	public void MoveBlock(Tile[,] board) {
+	public void MoveBlock(int xDiff, int yDiff) {
+		Tile[,] board = GameManager.INST.GetBoard();
 		// Check if I can move the block
 		foreach (Tile tile in tiles) {
-			int x = tile.GetX();
-			int y = tile.GetY();
-			
+			int x = tile.GetX(), y = tile.GetY();
 			// If there is no open space below and the tile below is not this block's tile
-			if (!OpenTileBelow(board, x, y) && !MyTileBelow(board, x, y)) isStatic = true;
+			if (!OpenTile(board, x + xDiff, y + yDiff) && !MyTile(board, x + xDiff, y + yDiff)) return;
 		}
 
 		// Move the block down one tile
-		if (!isStatic) {
-			// Remove the tiles from the board array
-			foreach (Tile tile in tiles) board[tile.GetX(), tile.GetY()] = null;
-			
-			// Add the tiles to the board array with their new positions
-			foreach (Tile tile in tiles) {
-				tile.transform.position += Vector3.down;
-				board[tile.GetX(), tile.GetY()] = tile;
-			}
+		// Remove the tiles from the board array
+		foreach (Tile tile in tiles) board[tile.GetX(), tile.GetY()] = null;
+		// Add the tiles to the board array with their new positions
+		foreach (Tile tile in tiles) {
+			tile.transform.position += new Vector3(xDiff, yDiff, 0);
+			board[tile.GetX(), tile.GetY()] = tile;
 		}
 	}
 	#endregion
 
 	#region Boolean functions
 	// Check if there is an open tile below the current tile
-	private bool OpenTileBelow(Tile[,] board, int x, int y) => y > 0 && board[x, y - 1] == null;
+	private bool OpenTile(Tile[,] board, int x, int y) => InBounds(x, y) && board[x, y] == null;
 	// Check if my tile is below
-	private bool MyTileBelow(Tile[,] board, int x, int y) => y > 0 && tiles.Contains(board[x, y - 1]);
+	private bool MyTile(Tile[,] board, int x, int y) => InBounds(x, y) && tiles.Contains(board[x, y]);
+	// Check if the tile is in the bounds of the board
+	private bool InBounds(int x, int y) => x >= 0 && x < GameManager.INST.GetBoardWidth() && y >= 0 && y < GameManager.INST.GetBoardHeight();
 	#endregion
 }

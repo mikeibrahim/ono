@@ -1,94 +1,149 @@
+/*
+Summary:
+	Blocks fall from the top of the screen.
+	The player can move the blocks left and right.
+	// Idea: the player can destroy a row of blocks.
+	Idea: the player can destroy a 3x3 area of blocks.
+	Idea: the game charges up to destroys 3 rows of blocks every so often.
+	Idea: the game charges up to destroys a 3x3 area of blocks at the player's location every so often.
+	Idea: Player bullets can be upgraded to pierce through multiple blocks
+	Idea: Player can purchase a lazer which can move through all blocks <-- is unlocked thrhough getting a certain score
+	Idea: Player can obtain a shield midmatch which can save the player from being destroyed once.
+	
+
+	How does the Player win?
+		Its an endless game; you get more score as you destroy more blocks and stay alive longer.
+
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public static class BlockPattern {
+public struct blockType {
+	public int[,] pattern;
+	public Color color;
+
+	public blockType(int[,] pattern, Color color) {
+		this.pattern = pattern;
+		this.color = color;
+	}
+}
+
+public static class Blocks {
 	// make all the tetris blocks
-	public static int[][,] pattern =  {
-		new int[,] {
-			{1},
-			{1},
-			{1},
-			{1}
-		},
-		new int[,] {
-			{1,1},
-			{1,1}
-		},
-		new int[,] {
-			{0,1,0},
-			{1,1,1}
-		},
-		new int[,] {
-			{0,1,1},
-			{1,1,0}
-		},
-		new int[,] {
-			{1,1,0},
-			{0,1,1}
-		},
-		new int[,] {
-			{1,0,0},
-			{1,1,1}
-		},
-		new int[,] {
-			{0,0,1},
-			{1,1,1}
-		},
+	public static blockType[] blocks = {
+		new blockType(
+			new int[,] {
+				{1},
+				{1},
+				{1},
+				{1}
+			}, Color.cyan
+		),
+		new blockType(
+			new int[,] {
+				{1,1},
+				{1,1}
+			}, Color.yellow
+		),
+		new blockType(
+			new int[,] {
+				{0,1,0},
+				{1,1,1}
+			}, Color.magenta
+		),
+		new blockType(
+			new int[,] {
+				{0,1,1},
+				{1,1,0}
+			}, Color.green
+		),
+		new blockType(
+			new int[,] {
+				{1,1,0},
+				{0,1,1}
+			}, Color.red
+		),
+		new blockType(
+			new int[,] {
+				{1,0,0},
+				{1,1,1}
+			}, Color.blue
+		),
+		new blockType(
+			new int[,] {
+				{0,0,1},
+				{1,1,1}
+			}, new Color(1,0.647f,0f) // orange
+		)
 	};
 
-	public static int numPatterns = pattern.Length;
+	public static int numBlocks = blocks.Length;
 }
 
 public class GameManager : MonoBehaviour {
-	public static GameManager INST;
-	private static int BOARD_WIDTH = 15, BOARD_HEIGHT = 10, BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT;
-	private Tile[,] board = new Tile[BOARD_WIDTH, BOARD_HEIGHT];
-	private List<Block> blocks = new List<Block>();
-	private float spawnInterval = 2f, stepInterval = 0.5f;
-	float currentSpawnInterval, currentStepInterval;
+	#region Variables
 	[SerializeField] private Block blockPrefab;
 	[SerializeField] private Tile tilePrefab;
-	[SerializeField] private GameObject playerPrefab;
-	[SerializeField] private Transform arenaHolder;
-	// private Tile[,] board = null; // a 2D array of tiles
+	[SerializeField] private Player playerPrefab;
+	[SerializeField] private Weapon weaponPrefab;
+	public static GameManager INST;
+	private static int 	BOARD_WIDTH = 25,
+						BOARD_HEIGHT = 30,
+						BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT;
+	private Tile[,] board = new Tile[BOARD_WIDTH, BOARD_HEIGHT];
+	private List<Block> blocks = new List<Block>();
+	private static float	spawnInterval = 2.5f,
+							stepInterval = 0.75f;
+	private float	currentSpawnInterval = spawnInterval,
+					currentStepInterval = stepInterval;
+	#endregion
 
+	#region Getters
+	public Tile[,] GetBoard() => board;
+	public int GetBoardWidth() => BOARD_WIDTH;
+	public int GetBoardHeight() => BOARD_HEIGHT;
+	#endregion
+
+	#region Methods
 	// Make the border around the board
 	private void CreateBorder() {
 		for (int i = -1; i <= BOARD_WIDTH; i++)
 			for (int j = -1; j <= BOARD_HEIGHT; j++)
 				if (i == -1 || i == BOARD_WIDTH || j == -1 || j == BOARD_HEIGHT) {
-					Tile tile = Instantiate(tilePrefab, arenaHolder.transform);
-					tile.transform.SetParent(arenaHolder.transform);
+					Tile tile = Instantiate(tilePrefab);
 					tile.Init(i, j, Color.black);
-					// tile.SetAsBorder(); // Set the tile to be a border
 				}
 	}
-
 	// Make the player
 	private void CreatePlayer() {
-		GameObject player = Instantiate(playerPrefab, arenaHolder.transform);
+		Player player = Instantiate(playerPrefab);
 		player.transform.position = new Vector3(BOARD_WIDTH / 2, BOARD_HEIGHT / 3, 0);
-	}
 
+		Weapon weapon = Instantiate(weaponPrefab);
+		weapon.transform.SetParent(player.transform);
+		weapon.transform.localPosition = new Vector3(0, 0, 0);
+		player.Init(weapon);
+	}
 	// Make a block
 	private void CreateBlock() {
-		// Get a random pattern
-		int patternIndex = UnityEngine.Random.Range(0, BlockPattern.numPatterns);
-		int[,] pattern = BlockPattern.pattern[patternIndex];
-
+		// Get a random block
+		int patternIndex = UnityEngine.Random.Range(0, Blocks.numBlocks);
+		blockType blockInfo = Blocks.blocks[patternIndex];
+		int[,] pattern = blockInfo.pattern;
 		pattern = CreateRandomRotationPattern(pattern); // Pick one of 4 new rotations
+		Color color = blockInfo.color;
 
-		Block block = Instantiate(blockPrefab, arenaHolder.transform);
-		Color c = new Color(UnityEngine.Random.Range(0, 1f), UnityEngine.Random.Range(0, 1f), UnityEngine.Random.Range(0, 1f));
-		block.Init(pattern, tilePrefab, c);
+		// Create the block
+		Block block = Instantiate(blockPrefab);
+		block.Init(pattern, tilePrefab, color);
 		block.PositionAtTop(BOARD_WIDTH, BOARD_HEIGHT);
 		// Add the block's tiles to the board
 		block.AddToBoard(board);
 		blocks.Add(block);
 	}
-
 	// Create a random rotation pattern
 	private int[,] CreateRandomRotationPattern(int[,] pattern) {
 		int width = pattern.GetLength(0);
@@ -112,19 +167,30 @@ public class GameManager : MonoBehaviour {
 		}
 		return newPattern;
 	}
-
+	// Move the camera to center of the board and resize it bruh i was asked to sit out of the quizlet because i was winning so much 
+	private void ConfigureCamera() {
+		Camera cam = Camera.main;
+		cam.transform.position = new Vector3(BOARD_WIDTH / 2.0f, BOARD_HEIGHT / 2.0f - 0.5f, -10);
+		// change camera size to fit the board
+		cam.orthographicSize = BOARD_HEIGHT / 2.0f + 1;
+	}
+	#endregion
+	
+	#region Callbacks
     private void Awake() {
 		INST = this;
-		currentSpawnInterval = spawnInterval;
+		// currentSpawnInterval = spawnInterval;
     }
-
 	private void Start(	) {
 		// Make the border
 		CreateBorder();
 		// Make the player
 		CreatePlayer();
+		// Center and size the camera
+		ConfigureCamera();
 	}
 
+	// Handles the intervals and time-based events
 	private void FixedUpdate() {
 		// Spawn a block every spawnInterval seconds
 		if (currentSpawnInterval <= 0) {
@@ -133,16 +199,15 @@ public class GameManager : MonoBehaviour {
 		} else {
 			currentSpawnInterval -= Time.deltaTime;
 		}
-
 		// Move the blocks
 		if (currentStepInterval <= 0) {
 			foreach (Block block in blocks) {
-				block.MoveBlock(board);
+				block.MoveBlock(0, -1);
 			}
 			currentStepInterval = stepInterval;
 		} else {
 			currentStepInterval -= Time.deltaTime;
 		}
-
 	}
+	#endregion
 }

@@ -3,15 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour {
-	// private Rigidbody2D rb; // handles physics and collisions
-	private Vector2 wasd = new Vector2(0, 0); // 
-	private float speed = 13; // how fast the player moves
-	private float gravity = -9.81f; // how fast the player falls
-	private float friction = 0.8f; // how fast the player slows down
-	private Vector3 velocity = new Vector2(0, 0);
-	private bool pressedSpace = false;
+	#region Variables
+	private static Vector3	wasd = new Vector2(0, 0),
+							velocity = new Vector2(0, 0);
+	private static float 	speed = 15,
+							gravity = -9.81f,
+							friction = 0.6f;
+	private Weapon	weapon;
+	bool pressedSpace;
+	#endregion
 
-	// Get the player's direction of movement
+	#region Methods
+	public void Init(Weapon weapon) {
+		this.weapon = weapon;
+	}
+	// Get the user's input
 	private void GetWasdInput() {
 		if (Input.GetKey(KeyCode.W)) wasd.y = 1;
 		else if (Input.GetKey(KeyCode.S)) wasd.y = -1;
@@ -20,25 +26,21 @@ public class Player : MonoBehaviour {
 		else if (Input.GetKey(KeyCode.D)) wasd.x = 1;
 		else wasd.x = 0;
 	}
-
+	// Update the player's movement direction based on the WASD input
 	private void SetVelocity() {
 		if (wasd.x != 0) velocity.x = wasd.x * speed;
 		if (wasd.y != 0) velocity.y = wasd.y * speed;
 	}
-
-	private void Gravity() => velocity.y += gravity * 1.5f * Time.deltaTime;
-	private bool IsGrounded() => Physics2D.RaycastAll(transform.position, Vector2.down, 0.501f).Length > 1;
-
-
+	private void Gravity() => velocity.y += gravity * 2f * Time.deltaTime;
+	// Makes the player bounce off of the walls
 	private void Bounce(RaycastHit2D hit) {
 		velocity *= friction;
 		// reflect the velocity in the collision normal
 		velocity = Vector3.Reflect(velocity, hit.normal);
 	}
-
 	// Update the player's position
 	private void Movement() {
-		if (pressedSpace) {
+		if (Input.GetKeyDown(KeyCode.Space)) {
 			GetWasdInput(); // Get WASD input
 			SetVelocity(); // Change velocity
 			pressedSpace = false;
@@ -47,10 +49,9 @@ public class Player : MonoBehaviour {
 		if (IsGrounded()) velocity.y = Mathf.Max(0, velocity.y); // make it so gravity doesnt effect when on the ground
 		UpdatePosition(); // Move the player
 	}
-
+	// Handles collisions and position
 	private void UpdatePosition() {
 		if (velocity.magnitude <= 0.1) return; // if the velocity is 0, don't move
-
 		// circlecast in the direction the player is moving
 		RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, 0.5f, velocity, velocity.magnitude * Time.deltaTime);
 		foreach (RaycastHit2D hit in hits) {
@@ -59,18 +60,27 @@ public class Player : MonoBehaviour {
 				break;
 			}
 		}
-
 		// if the player is not going to hit anything, move the player
 		if (hits.Length == 1) {
 			transform.position += velocity * Time.deltaTime;
 		}
 	}
-
-	private void Update() {
-		if (Input.GetKeyDown(KeyCode.Space)) pressedSpace = true;
+	// Handles shooting
+	private void ShootWeapon() {
+		if (Input.GetMouseButtonDown(0)) {
+			weapon.Shoot();
+		}
 	}
+	#endregion
 
-    private void FixedUpdate() {
+	#region Booleans
+	private bool IsGrounded() => Physics2D.RaycastAll(transform.position, Vector2.down, 0.501f).Length > 1;
+	#endregion
+
+	#region Callbacks
+	private void Update() {
 		Movement(); // Move the player
-    }
+		ShootWeapon(); // Shoot the weapon
+	}
+	#endregion
 }
