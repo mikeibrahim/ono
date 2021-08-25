@@ -11,7 +11,6 @@ public class Bullet : MonoBehaviour {
 			// If its a tile
 			if (hit.collider.gameObject.GetComponent<Tile>()) {
 				int moveX = transform.eulerAngles.z > 180 ? 1 : -1; // move the block in the direction of the bullet's x dir
-				print("Z: "+transform.eulerAngles.z);
 				hit.collider.gameObject.GetComponentInParent<Block>()?.MoveBlock(moveX, 0);
 				// Destroy the bullet
 				Destroy(gameObject);

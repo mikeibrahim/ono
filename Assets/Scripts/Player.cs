@@ -9,9 +9,11 @@ public class Player : MonoBehaviour {
 							velocity = Vector2.zero;
 	private static int		maxHeath = 1;
 	private static float 	speed = 15,
-							gravity = -9.81f,
-							friction = 0.6f;
-	int currentHealth = maxHeath;
+							maxGravity = -9.81f,
+							maxFriction = 0.5f;
+	private int currentHealth = maxHeath;
+	private float 	friction = maxFriction,
+					gravity = maxGravity;
 	bool pressedSpace;
 	#endregion
 
@@ -62,7 +64,10 @@ public class Player : MonoBehaviour {
 			pressedSpace = false;
 		}
 		Gravity();
-		if (IsGrounded()) velocity.y = Mathf.Max(0, velocity.y); // make it so gravity doesnt effect when on the ground
+		if (IsGrounded()) {
+			velocity.y = Mathf.Max(0, velocity.y); // make it so gravity doesnt effect when on the ground
+			velocity.x -= velocity.x * 10 * friction * Time.deltaTime; // friction
+		}
 		UpdatePosition(); // Move the player
 	}
 	// Handles collisions and position
@@ -87,6 +92,16 @@ public class Player : MonoBehaviour {
 			weapon.Shoot();
 		}
 	}
+	// Player heavy when shifting
+	private void PlayerHeavy() {
+		if (Input.GetKey(KeyCode.LeftShift)) {
+			friction = maxFriction / 2.0f;
+			gravity = maxGravity * 2;
+		} else {
+			friction = maxFriction;
+			gravity = maxGravity;
+		}
+	}
 	#endregion
 
 	#region Booleans
@@ -97,6 +112,7 @@ public class Player : MonoBehaviour {
 	private void Update() {
 		Movement(); // Move the player
 		ShootWeapon(); // Shoot the weapon
+		PlayerHeavy(); // Player heavy when shifting
 	}
 	
 	#endregion

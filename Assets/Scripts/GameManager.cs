@@ -94,7 +94,7 @@ public class GameManager : MonoBehaviour {
 	private static int 	BOARD_WIDTH = 15,
 						BOARD_HEIGHT = 20,
 						BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT,
-						extraLazers = 6;
+						extraLazers = 3;
 	private Tile[,] board = new Tile[BOARD_WIDTH, BOARD_HEIGHT];
 	private List<Block> blocks = new List<Block>();
 	private static Color laserColor = Color.red;
