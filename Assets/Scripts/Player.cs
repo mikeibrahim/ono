@@ -4,19 +4,35 @@ using UnityEngine;
 
 public class Player : MonoBehaviour {
 	#region Variables
-	private static Vector3	wasd = new Vector2(0, 0),
-							velocity = new Vector2(0, 0);
+	private Weapon	weapon;
+	private static Vector3	wasd = Vector2.zero,
+							velocity = Vector2.zero;
+	private static int		maxHeath = 1;
 	private static float 	speed = 15,
 							gravity = -9.81f,
 							friction = 0.6f;
-	private Weapon	weapon;
+	int currentHealth = maxHeath;
 	bool pressedSpace;
 	#endregion
 
-	#region Methods
+	#region Public Methods
 	public void Init(Weapon weapon) {
 		this.weapon = weapon;
 	}
+	// Handles lives
+	public void Damage() {
+		currentHealth--;
+		if (currentHealth <= 0) {
+			Die();
+		}
+	}
+	// Handles death
+	public void Die() {
+		Debug.Log("Player died");
+		Destroy(gameObject);
+	}
+	#endregion
+	#region Private Methods
 	// Get the user's input
 	private void GetWasdInput() {
 		if (Input.GetKey(KeyCode.W)) wasd.y = 1;
@@ -82,5 +98,6 @@ public class Player : MonoBehaviour {
 		Movement(); // Move the player
 		ShootWeapon(); // Shoot the weapon
 	}
+	
 	#endregion
 }

@@ -9,7 +9,7 @@ Summary:
 	Idea: Player bullets can be upgraded to pierce through multiple blocks
 	Idea: Player can purchase a lazer which can move through all blocks <-- is unlocked thrhough getting a certain score
 	Idea: Player can obtain a shield midmatch which can save the player from being destroyed once.
-	
+	Idea: Player gets a half second of invlunerability after getting hit.
 
 	How does the Player win?
 		Its an endless game; you get more score as you destroy more blocks and stay alive longer.
@@ -87,27 +87,32 @@ public class GameManager : MonoBehaviour {
 	#region Variables
 	[SerializeField] private Block blockPrefab;
 	[SerializeField] private Tile tilePrefab;
+	[SerializeField] private LaserTile laserTilePrefab;
 	[SerializeField] private Player playerPrefab;
 	[SerializeField] private Weapon weaponPrefab;
 	public static GameManager INST;
-	private static int 	BOARD_WIDTH = 25,
-						BOARD_HEIGHT = 30,
-						BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT;
+	private static int 	BOARD_WIDTH = 15,
+						BOARD_HEIGHT = 20,
+						BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT,
+						extraLazers = 6;
 	private Tile[,] board = new Tile[BOARD_WIDTH, BOARD_HEIGHT];
 	private List<Block> blocks = new List<Block>();
-	private static float	spawnInterval = 2.5f,
-							stepInterval = 0.75f;
+	private static Color laserColor = Color.red;
+	private static float	spawnInterval = 7f,
+							stepInterval = 1f,
+							laserSpawnInterval = 5f;
 	private float	currentSpawnInterval = spawnInterval,
-					currentStepInterval = stepInterval;
+					currentStepInterval = stepInterval,
+					currentLaserSpawnInterval = laserSpawnInterval;
 	#endregion
 
-	#region Getters
+	#region Public Methods
 	public Tile[,] GetBoard() => board;
 	public int GetBoardWidth() => BOARD_WIDTH;
 	public int GetBoardHeight() => BOARD_HEIGHT;
 	#endregion
 
-	#region Methods
+	#region Private Methods
 	// Make the border around the board
 	private void CreateBorder() {
 		for (int i = -1; i <= BOARD_WIDTH; i++)
@@ -174,6 +179,19 @@ public class GameManager : MonoBehaviour {
 		// change camera size to fit the board
 		cam.orthographicSize = BOARD_HEIGHT / 2.0f + 1;
 	}
+	// Make the laser tiles
+	private void CreateLaserTiles() {
+		bool isVertical = UnityEngine.Random.Range(0, 2) == 0;
+		int target = isVertical ? UnityEngine.Random.Range(extraLazers, BOARD_WIDTH - extraLazers) : UnityEngine.Random.Range(extraLazers, BOARD_HEIGHT - extraLazers);
+		int length = isVertical ? BOARD_HEIGHT : BOARD_WIDTH;
+		for (int i = 0; i < length; i++) { // for each tile in the row/col of the laser
+			for (int e = -extraLazers; e <= extraLazers; e++) { // for each of the laser's width tiles
+				Vector2 laserPos = isVertical ? new Vector2(target + e, i) : new Vector2(i, target + e);
+				LaserTile laserTile = Instantiate(laserTilePrefab);
+				laserTile.Init((int)laserPos.x, (int)laserPos.y, laserColor, stepInterval);
+			}
+		}
+	}
 	#endregion
 	
 	#region Callbacks
@@ -196,18 +214,19 @@ public class GameManager : MonoBehaviour {
 		if (currentSpawnInterval <= 0) {
 			CreateBlock();
 			currentSpawnInterval = spawnInterval;
-		} else {
-			currentSpawnInterval -= Time.deltaTime;
-		}
+		} else currentSpawnInterval -= Time.deltaTime;
+
 		// Move the blocks
 		if (currentStepInterval <= 0) {
-			foreach (Block block in blocks) {
-				block.MoveBlock(0, -1);
-			}
+			foreach (Block block in blocks) block.MoveBlock(0, -1);
 			currentStepInterval = stepInterval;
-		} else {
-			currentStepInterval -= Time.deltaTime;
-		}
+		} else currentStepInterval -= Time.deltaTime;
+
+		// Spawn a laser every laserSpawnInterval seconds
+		if (currentLaserSpawnInterval <= 0) {
+			CreateLaserTiles();
+			currentLaserSpawnInterval = laserSpawnInterval;
+		} else currentLaserSpawnInterval -= Time.deltaTime;
 	}
 	#endregion
 }

@@ -154,6 +154,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blockPrefab: {fileID: 5587144678816155949, guid: 58df8043d62f54f169e172610a359629, type: 3}
   tilePrefab: {fileID: -6517706635674025121, guid: 4aceb6c408544476d8aec3510b9111d2, type: 3}
+  laserTilePrefab: {fileID: 8991324908823638149, guid: 07eacbe3d9e4c4d6c8f9429d691a78cf, type: 3}
   playerPrefab: {fileID: 9108451170806771401, guid: f3bedba9ddb1f498281eeca345a0e9aa, type: 3}
   weaponPrefab: {fileID: 7027871680613726500, guid: af2439b54088e4fc0af89cf387cd91a2, type: 3}
 --- !u!4 &8408897
