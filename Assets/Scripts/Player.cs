@@ -4,22 +4,21 @@ using UnityEngine;
 
 public class Player : MonoBehaviour {
 	#region Variables
-	private Weapon	weapon;
+	private Weapon weapon;
 	private static Vector3	wasd = Vector2.zero,
 							velocity = Vector2.zero;
-	private static int		maxHeath = 1;
-	private static float 	speed = 15,
+	private static int maxHeath = 1;
+	private static float	speed = 15,
 							maxGravity = -9.81f,
 							maxFriction = 0.5f;
 	private int currentHealth = maxHeath;
-	private float 	friction = maxFriction,
-					gravity = maxGravity;
-	bool pressedSpace;
+	private float 	currentFriction = maxFriction,
+					currentGravity = maxGravity;
 	#endregion
 
 	#region Public Methods
-	public void Init(Weapon weapon) {
-		this.weapon = weapon;
+	public void Init() {
+		weapon = GetComponentInChildren<Weapon>();
 	}
 	// Handles lives
 	public void Damage() {
@@ -30,8 +29,7 @@ public class Player : MonoBehaviour {
 	}
 	// Handles death
 	public void Die() {
-		Debug.Log("Player died");
-		Destroy(gameObject);
+		gameObject.SetActive(false);
 	}
 	#endregion
 	#region Private Methods
@@ -49,10 +47,10 @@ public class Player : MonoBehaviour {
 		if (wasd.x != 0) velocity.x = wasd.x * speed;
 		if (wasd.y != 0) velocity.y = wasd.y * speed;
 	}
-	private void Gravity() => velocity.y += gravity * 2f * Time.deltaTime;
+	private void Gravity() => velocity.y += currentGravity * 2f * Time.deltaTime;
 	// Makes the player bounce off of the walls
 	private void Bounce(RaycastHit2D hit) {
-		velocity *= friction;
+		velocity *= currentFriction;
 		// reflect the velocity in the collision normal
 		velocity = Vector3.Reflect(velocity, hit.normal);
 	}
@@ -61,12 +59,12 @@ public class Player : MonoBehaviour {
 		if (Input.GetKeyDown(KeyCode.Space)) {
 			GetWasdInput(); // Get WASD input
 			SetVelocity(); // Change velocity
-			pressedSpace = false;
 		}
 		Gravity();
 		if (IsGrounded()) {
-			velocity.y = Mathf.Max(0, velocity.y); // make it so gravity doesnt effect when on the ground
-			velocity.x -= velocity.x * 10 * friction * Time.deltaTime; // friction
+			velocity.y = Mathf.Max(0, velocity.y); // make it so gravity doesnt effect when on the grounded
+			int heavyMult = currentFriction != maxFriction ? 10 : 1;
+			velocity.x -= velocity.x * heavyMult * currentFriction * Time.deltaTime; // friction
 		}
 		UpdatePosition(); // Move the player
 	}
@@ -95,11 +93,11 @@ public class Player : MonoBehaviour {
 	// Player heavy when shifting
 	private void PlayerHeavy() {
 		if (Input.GetKey(KeyCode.LeftShift)) {
-			friction = maxFriction / 2.0f;
-			gravity = maxGravity * 2;
+			currentFriction = maxFriction * 0.5f; // double friction force
+			currentGravity = maxGravity * 2.0f; // double gravity
 		} else {
-			friction = maxFriction;
-			gravity = maxGravity;
+			currentFriction = maxFriction;
+			currentGravity = maxGravity;
 		}
 	}
 	#endregion

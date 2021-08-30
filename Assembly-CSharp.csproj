@@ -42,6 +42,7 @@
      <Compile Include="Assets\Scripts\Player.cs" />
      <Compile Include="Assets\Scripts\Block.cs" />
      <Compile Include="Assets\Scripts\Tile.cs" />
+     <Compile Include="Assets\Scripts\MeteorTile.cs" />
      <Compile Include="Assets\Scripts\LaserTile.cs" />
     <Reference Include="UnityEngine">
         <HintPath>/Applications/Unity/Unity.app/Contents/Managed/UnityEngine/UnityEngine.dll</HintPath>

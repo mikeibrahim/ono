@@ -1,15 +1,18 @@
 /*
 Summary:
-	Blocks fall from the top of the screen.
-	The player can move the blocks left and right.
-	// Idea: the player can destroy a row of blocks.
-	Idea: the player can destroy a 3x3 area of blocks.
-	Idea: the game charges up to destroys 3 rows of blocks every so often.
-	Idea: the game charges up to destroys a 3x3 area of blocks at the player's location every so often.
-	Idea: Player bullets can be upgraded to pierce through multiple blocks
-	Idea: Player can purchase a lazer which can move through all blocks <-- is unlocked thrhough getting a certain score
-	Idea: Player can obtain a shield midmatch which can save the player from being destroyed once.
-	Idea: Player gets a half second of invlunerability after getting hit.
+	[+] = Added; [*] = Not Added Yet; [-] = Probably Not Needed
+	[+] Blocks fall from the top of the screen.
+	[+] The player can move the blocks left and right.
+	[+] The game charges up to destroys rows of blocks every so often (doesnt break blocks, only the player).
+	[+] The game tracks the player with a growing meteorite.
+	[*] Destroy blocks of 3x3 or more to gain points.
+	[*] Player can obtain a shield/powerup midmatch which can save the player from being destroyed once.
+	[*] Player gets a half second of invlunerability after getting hit.
+	[*] Player bullets can be upgraded to pierce through multiple blocks
+	[*] Player can purchase a lazer which can move through all blocks <-- is unlocked thrhough getting a certain score
+	[-] The game charges up to destroys a 3x3 area of blocks at the player's location every so often.
+	[-] The player can destroy a 3x3 area of blocks.
+	[-] The player can destroy a row of blocks.
 
 	How does the Player win?
 		Its an endless game; you get more score as you destroy more blocks and stay alive longer.
@@ -88,22 +91,30 @@ public class GameManager : MonoBehaviour {
 	[SerializeField] private Block blockPrefab;
 	[SerializeField] private Tile tilePrefab;
 	[SerializeField] private LaserTile laserTilePrefab;
+	[SerializeField] private MeteorTile meteorTilePrefab;
 	[SerializeField] private Player playerPrefab;
 	[SerializeField] private Weapon weaponPrefab;
 	public static GameManager INST;
-	private static int 	BOARD_WIDTH = 15,
-						BOARD_HEIGHT = 20,
-						BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT,
-						extraLazers = 3;
+	private Player player;
 	private Tile[,] board = new Tile[BOARD_WIDTH, BOARD_HEIGHT];
 	private List<Block> blocks = new List<Block>();
-	private static Color laserColor = Color.red;
-	private static float	spawnInterval = 7f,
-							stepInterval = 1f,
-							laserSpawnInterval = 5f;
+	private static Color laserColor = Color.red,
+						 meteorColor = new Color(1,0.647f,0f); // orange;
+	private static int	BOARD_WIDTH = 25,
+						BOARD_HEIGHT = 20,
+						BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT,
+						extraLazers = 0;
+	private static float spawnInterval = 7f,
+						 stepInterval = 1f,
+						 laserSpawnInterval = 4f,
+						 meteorSpawnInterval = 5f,
+						 meteorTileSpeed = 4f,
+						 meteorTileSize = 4f,
+						 meteorTileLifeTime = 3f;
 	private float	currentSpawnInterval = spawnInterval,
 					currentStepInterval = stepInterval,
-					currentLaserSpawnInterval = laserSpawnInterval;
+					currentLaserSpawnInterval = laserSpawnInterval,
+					currentMeteorSpawnInterval = meteorSpawnInterval;
 	#endregion
 
 	#region Public Methods
@@ -124,13 +135,14 @@ public class GameManager : MonoBehaviour {
 	}
 	// Make the player
 	private void CreatePlayer() {
-		Player player = Instantiate(playerPrefab);
-		player.transform.position = new Vector3(BOARD_WIDTH / 2, BOARD_HEIGHT / 3, 0);
+		Player newPlayer = Instantiate(playerPrefab);
+		newPlayer.transform.position = new Vector3(BOARD_WIDTH / 2, BOARD_HEIGHT / 3, 0);
 
 		Weapon weapon = Instantiate(weaponPrefab);
-		weapon.transform.SetParent(player.transform);
+		weapon.transform.SetParent(newPlayer.transform);
 		weapon.transform.localPosition = new Vector3(0, 0, 0);
-		player.Init(weapon);
+		newPlayer.Init();
+		player = newPlayer;
 	}
 	// Make a block
 	private void CreateBlock() {
@@ -192,6 +204,16 @@ public class GameManager : MonoBehaviour {
 			}
 		}
 	}
+	// Make the meteor tiles
+	private void CreateMeteorTile() {
+		// int spawnX = UnityEngine.Random.Range(0, BOARD_WIDTH);
+		// int spawnY = UnityEngine.Random.Range(0, BOARD_HEIGHT);
+		int spawnX = (int)player.transform.position.x;
+		int spawnY = (int)player.transform.position.y;
+		MeteorTile meteorTile = Instantiate(meteorTilePrefab);
+		meteorTile.Init(spawnX, spawnY, meteorColor, meteorTileSpeed, meteorTileSize, meteorTileLifeTime);
+		meteorTile.SetTarget(player.transform);
+	}
 	#endregion
 	
 	#region Callbacks
@@ -227,6 +249,12 @@ public class GameManager : MonoBehaviour {
 			CreateLaserTiles();
 			currentLaserSpawnInterval = laserSpawnInterval;
 		} else currentLaserSpawnInterval -= Time.deltaTime;
+
+		// Spawn a meteor every meteorSpawnInterval seconds
+		if (currentMeteorSpawnInterval <= 0) {
+			CreateMeteorTile();
+			currentMeteorSpawnInterval = meteorSpawnInterval;
+		} else currentMeteorSpawnInterval -= Time.deltaTime;
 	}
 	#endregion
 }

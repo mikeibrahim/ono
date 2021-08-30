@@ -21,17 +21,18 @@ public class LaserTile : Tile {
 		finalColor = new Color(c.r, c.g, c.b, transparency);
 		spriteRenderer.color = Color.Lerp(startColor, finalColor, 1.0f / numLevels);
     }
-	public void IncreaseLevel() {
+	#endregion
+
+	#region Private Methods
+	private void IncreaseLevel() {
 		currentLevel++;
 		if (currentLevel > numLevels) Explode();
 		else spriteRenderer.color = Color.Lerp(startColor, finalColor, (float)currentLevel / numLevels);
 	}
-	public void Explode() {
+	private void Explode() {
 		// rectcastall to find all objects in the explosion radius
-		Collider2D[] colliders = Physics2D.OverlapAreaAll(transform.position - new Vector3(0.49f, 0.49f), transform.position + new Vector3(0.49f, 0.49f));
-		foreach (Collider2D collider in colliders) {
-			collider.gameObject.GetComponent<Player>()?.Damage();
-		}
+		Collider2D[] colliders = Physics2D.OverlapAreaAll(transform.position - new Vector3(0.45f, 0.45f), transform.position + new Vector3(0.45f, 0.45f));
+		foreach (Collider2D collider in colliders) collider.gameObject.GetComponent<Player>()?.Damage();
 		Destroy(gameObject);
 	}
 	#endregion
