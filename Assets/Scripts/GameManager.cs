@@ -103,8 +103,9 @@ public class GameManager : MonoBehaviour {
 	private static int	BOARD_WIDTH = 25,
 						BOARD_HEIGHT = 20,
 						BOARD_SIZE = BOARD_WIDTH * BOARD_HEIGHT,
-						extraLazers = 0;
-	private static float spawnInterval = 7f,
+						minGroupSize = 2, // + 1 (but it is easier to be inclusive)
+						extraLazers = 1;
+	private static float spawnInterval = 5f,
 						 stepInterval = 1f,
 						 laserSpawnInterval = 4f,
 						 meteorSpawnInterval = 5f,
@@ -119,8 +120,13 @@ public class GameManager : MonoBehaviour {
 
 	#region Public Methods
 	public Tile[,] GetBoard() => board;
+	public Block GetBlockPrefab() => blockPrefab;
 	public int GetBoardWidth() => BOARD_WIDTH;
 	public int GetBoardHeight() => BOARD_HEIGHT;
+	// Check if the tile is in the bounds of the board
+	public bool InBounds(int x, int y) => x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT;
+	public void RemoveTile(Tile t) => board[t.GetX(), t.GetY()] = null;
+	public void RemoveBlock(Block b) => blocks.Remove(b);
 	#endregion
 
 	#region Private Methods
@@ -214,6 +220,54 @@ public class GameManager : MonoBehaviour {
 		meteorTile.Init(spawnX, spawnY, meteorColor, meteorTileSpeed, meteorTileSize, meteorTileLifeTime);
 		meteorTile.SetTarget(player.transform);
 	}
+	// Check for block groups
+	private void CheckForBlockGroups() {
+		// List<Tile> tilesToRemove = new List<Tile>();
+		for (int xOrigin = 0; xOrigin < BOARD_WIDTH; xOrigin++) {
+			for (int yOrigin = 0; yOrigin < BOARD_HEIGHT; yOrigin++) {
+				if (board[xOrigin, yOrigin] == null) continue;
+				// We got our origin point of the group at (xOrigin, yOrigin)
+				int groupWidth = 0, groupHeight = 0;
+				// find the maximum possible width for the group
+				while (InBounds(xOrigin + groupWidth + 1, yOrigin) && board[xOrigin + groupWidth + 1, yOrigin]) { // if in bounds and there is a tile there
+					groupWidth++; // ingrease max width
+				}
+				while (InBounds(xOrigin, yOrigin + groupHeight + 1) && board[xOrigin, yOrigin + groupHeight + 1]) { // if in bounds and there is a tile above
+					groupHeight++; // increase max height
+				}
+				if (groupWidth < minGroupSize || groupHeight < minGroupSize) continue;
+				for (int h = 0; h <= groupHeight; h++) {
+					for (int w = 0; w <= groupWidth; w++) {
+						bool xUnderMinGroupSize = w < minGroupSize, yUnderMinGroupSize = h < minGroupSize;
+						// If there is a missing tile in this current row
+						if (InBounds(xOrigin + w, yOrigin + h) && !board[xOrigin + w, yOrigin + h]) {
+							// If you cant cut off the group at this y
+							if (yUnderMinGroupSize) {
+								groupWidth = w - 1; // clamp the width to the current - 1
+							} else {
+								groupHeight = h - 1; // clamp the height to the current - 1
+								break;
+							}
+						}
+					}
+				}
+				// If the group is big enough
+				if (groupWidth >= minGroupSize && groupHeight >= minGroupSize) {
+					// delete the tiles
+					for (int h = 0; h <= groupHeight; h++) {
+						for (int w = 0; w <= groupWidth; w++) {
+							if (!board[xOrigin + w, yOrigin + h]) continue;
+							print("Removing tile at " + (xOrigin + w) + ", " + (yOrigin + h));
+							board[xOrigin + w, yOrigin + h].BreakBlock();
+							// board[xOrigin + w, yOrigin + h].BreakFromBlock();
+							board[xOrigin + w, yOrigin + h] = null;
+						}
+					}
+					// TODO: Add the score
+				}
+			}
+		}
+	}
 	#endregion
 	
 	#region Callbacks
@@ -242,6 +296,7 @@ public class GameManager : MonoBehaviour {
 		if (currentStepInterval <= 0) {
 			foreach (Block block in blocks) block.MoveBlock(0, -1);
 			currentStepInterval = stepInterval;
+			CheckForBlockGroups();
 		} else currentStepInterval -= Time.deltaTime;
 
 		// Spawn a laser every laserSpawnInterval seconds
